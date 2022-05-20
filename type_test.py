@@ -20,6 +20,9 @@ class TypeSpeedGUI:
         self.red_char = 0
         self.char_count = 0
         self.text_list = self.random_text.split()
+        self.track = 0
+        # self.count = 0
+        self.cur_word = ""
 
         self.sample_label = Label(self.frame, text= self.random_text, font=("Helvetica", 18))
         self.sample_label.grid(row=0, column=0, columnspan=2, padx=5, pady=10)
@@ -27,7 +30,7 @@ class TypeSpeedGUI:
         self.input_entry = Entry(self.frame, width=40, font=("Helvetica", 24))
         self.input_entry.grid(row=1, column=0, columnspan=2, padx=5, pady=10)
         self.input_entry.bind("<KeyRelease>", self.start)
-        # self.input_entry.bind("<KeyRelease>", self.key_reset)
+        # self.input_entry.bind("<KeyRelease>", self.track_word)
         
         self.speed_label = Label(self.frame, text= f"{self.wpm:.2f} WPM\n{self.accuracy:.2f}% accuracy", font=("Helvetica", 18))
         self.speed_label.grid(row=2, column=0, columnspan=2, padx=5, pady=10)
@@ -41,7 +44,7 @@ class TypeSpeedGUI:
         self.quit_button.grid(row=3, column=1, padx=5, pady=10)
 
         self.frame.pack( expand=True)
-        self.frame.bind("<Leave>", self.quit)
+        self.frame.bind("<Leave>", self.close)
     
         self.running = False
 
@@ -58,27 +61,65 @@ class TypeSpeedGUI:
                 self.running = True
                 t = threading.Thread(target= self.time_thread)
                 t.start()
+        
+        self.sample_label.config(underline= self.track)
 
+        if self.text_list[0].startswith(self.input_entry.get()) and event.keycode not in [13, 16, 17, 18, 32]:
+            if event.keycode == 8 and self.input_entry.get():
+                # print("back")
+                self.track -= 1
+            elif self.input_entry.get() :
+                # print("foward")
+                self.track += 1
+            
         self.char_count += 1
 
-        if not self.text_list[0].startswith(self.input_entry.get()):
+        if not self.text_list[0].startswith(self.input_entry.get()) and event.keycode != 32:
             self.red_char += 1
             self.input_entry.config(fg="red")
 
         else:
             self.input_entry.config(fg="black")
-
+           
         self.accuracy = (1 - self.red_char/ self.char_count)*100
         if event.keycode == 32:
+            self.cur_word = self.text_list[0]
+            count = 0
             if self.input_entry.get().startswith(self.text_list[0]):
-                cur_word = self.text_list[0]
-                self.text_list.remove(cur_word)
+                self.text_list.remove(self.cur_word)
+                count = 0
+            elif count == 0 :
+                # print("back sentence")
+                self.track -=  (len(self.cur_word) + 1)
+                count = 1
+            # print("next")
+            self.track += 1
             self.input_entry.delete(0, END)
 
         if self.text_list == [] or self.text_list == None:
             self.running = False
             self.input_entry.config(state= 'disable')
         
+    def track_word(self, event):
+        # print ("plaea")
+        self.sample_label.config(underline= self.track)
+        
+        if self.cur_word.startswith(self.input_entry.get()) and not event.keycode in [8, 13, 16, 17, 18, 32]:
+            if event.keycode == 8:
+                self.track -= 1
+                return
+            if event.keycode == 32:
+                self.count = 0
+                self.track += 1
+            self.track += 1
+            return
+
+        elif not self.input_entry.get().startswith(self.cur_word) :
+            self.cur_word = self.text_list[0]
+            if event.keycode == 32 and self.count == 0:
+                self.track -= len(self.cur_word)
+                self.count = 1
+            return
 
     def start(self, event):
 
@@ -116,17 +157,24 @@ class TypeSpeedGUI:
             self.speed_label.configure(text = f"{self.wpm:.2f} WPM\n{self.accuracy:.2f}% accuracy")
 
     def reset(self):
+
         self.running = False
         self.input_entry.config(state = 'normal')
         self.char_count = 0
-        self.red_char =0
+        self.red_char = 0
         self.counter = 0
         self.wpm = 0
         self.random_text = random.choice(self.text)
         self.text_list = self.random_text.split()
+        self.track = 0
+        # self.count = 0
+        self.cur_word = ""
         self.speed_label.config(text= f"{self.wpm:.2f} WPM\n{self.accuracy:.2f}% accuracy")
-        self.sample_label.config(text= self.random_text)
+        self.sample_label.config(text= self.random_text, underline= self.track)
         self.input_entry.delete(0, END)
+
+    def close(self):
+        self.root.destroy()
 
     def quit(self):
         self.root.destroy()
