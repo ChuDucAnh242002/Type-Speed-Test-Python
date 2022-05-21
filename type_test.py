@@ -24,7 +24,7 @@ class TypeSpeedGUI:
 
         # Create random text
         self.text = open("text1.txt", "r").read().split("\n")
-        self.random_text = random.choice(self.text)
+        self.random_text = random.choice(self.text).strip()
         self.text_list = self.random_text.split()
 
         # Frame
@@ -210,7 +210,7 @@ class TypeSpeedGUI:
         # Reset text
         cur_text = self.random_text
         while cur_text == self.random_text:
-            self.random_text = random.choice(self.text)
+            self.random_text = random.choice(self.text).strip()
         self.text_list = self.random_text.split()
 
         # Reset speed and accuracy
