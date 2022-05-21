@@ -95,19 +95,22 @@ class TypeSpeedGUI:
         # Tracking letter
         if self.text_list[0].startswith(self.input_entry.get()) and event.keycode not in [13, 16, 17, 18, 32]:
             # If Back space the track letter also go back
-            if event.keycode == 8 and self.input_entry.get() :
+            if event.keycode == 8 and self.input_entry.get():
                 if self.red == True:
                     self.red = False
+                    self.input_entry.config(fg="black")
                     return
                 self.track -= 1
                 self.track_words -= 1
+
             # If none Back space then the track moves forward
             elif event.keycode != 8 and self.input_entry.get() :
                 self.track += 1
                 self.track_words += 1
         
         # Count the characters
-        self.char_count += 1
+        if event.keycode != 32:
+            self.char_count += 1
 
         # If the text is wrong, the entry will change to red
         if not self.text_list[0].startswith(self.input_entry.get()) and event.keycode != 32:
@@ -116,11 +119,8 @@ class TypeSpeedGUI:
             self.input_entry.config(fg="red")
 
         # If text is correct, the entry word will be black
-        else:
+        elif self.text_list[0].startswith(self.input_entry.get()):
             self.input_entry.config(fg="black")
-           
-        # Calculate accurracy
-        self.accuracy = (1 - self.red_char/ self.char_count)*100
 
         # If Key press is space, delete the entry and start new word
         if event.keycode == 32:
@@ -131,21 +131,26 @@ class TypeSpeedGUI:
             if self.input_entry.get().startswith(self.cur_word) and self.track_words == len(self.cur_word):
                 self.text_list.remove(self.cur_word)
                 count = 0
+                self.char_count += 1
             
             # If the word type is not correct, just delete the entry
             elif count == 0 :
                 self.track -=  (self.track_words + 1)
                 count = 1
-
+                self.red_char += 1
+            
             self.track += 1
             self.track_words = 0
             self.input_entry.delete(0, END)
+
+        # Calculate accurracy
+        self.accuracy = (1 - self.red_char/ self.char_count)*100
 
         # Underline the tracking letter
         self.text_label.config(underline= self.track)
 
         # If the text list is empty, close the input entry
-        if self.text_list == [] or self.text_list == None:
+        if self.text_list == [] :
             self.running = False
             self.input_entry.config( state= 'disable')
 
@@ -203,7 +208,9 @@ class TypeSpeedGUI:
         self.input_entry.config(state = 'normal')
 
         # Reset text
-        self.random_text = random.choice(self.text)
+        cur_text = self.random_text
+        while cur_text == self.random_text:
+            self.random_text = random.choice(self.text)
         self.text_list = self.random_text.split()
 
         # Reset speed and accuracy
@@ -212,6 +219,7 @@ class TypeSpeedGUI:
         self.red = False
         self.counter = 0
         self.wpm = 0
+        self.accuracy = 100
         
         # Reset tracking word and letter
         self.track = 0
