@@ -1,3 +1,10 @@
+"""
+    Author : Chu Duc Anh
+    Github : https://github.com/ChuDucAnh242002
+    Inspired by Speed Typing Test in Python of NeuralNine: https://www.youtube.com/watch?v=quBb--IJPPc&t=14s
+    A program that show the your typing speed by type a test
+"""
+
 from tkinter import *
 import time
 import threading
@@ -6,30 +13,40 @@ import random
 class TypeSpeedGUI:
 
     def __init__(self):
+        # The main window
         self.root = Tk()
-        self.root.title("10 Fast Finger")
+        self.root.title("10 Fast Finger by Duc Anh")
         self.root.geometry("1200x400")
 
+        # Create random text
         self.text = open("text.txt", "r").read().split("\n")
         self.random_text = random.choice(self.text)
+        self.text_list = self.random_text.split()
 
+        # Frame
         self.frame = Frame(self.root)
+        
+        # To calculate the speed in word per minute and accuracy
         self.wpm = 0
         self.counter =0
         self.accuracy = 100
-        self.red_char = 0
         self.char_count = 0
-        self.text_list = self.random_text.split()
+        self.red_char = 0
+        
+        
+        # Track the current word and letter
         self.track = 0
-        # self.count = 0
+        self.track_words = 0
+        self.red = False
         self.cur_word = ""
 
+        # Text labels
         self.sample_label = Label(self.frame, text= self.random_text, font=("Helvetica", 18))
         self.sample_label.grid(row=0, column=0, columnspan=2, padx=5, pady=10)
 
         self.input_entry = Entry(self.frame, width=40, font=("Helvetica", 24))
         self.input_entry.grid(row=1, column=0, columnspan=2, padx=5, pady=10)
-        self.input_entry.bind("<KeyRelease>", self.start)
+        self.input_entry.bind("<KeyRelease>", self.start_word)
         # self.input_entry.bind("<KeyRelease>", self.track_word)
         
         self.speed_label = Label(self.frame, text= f"{self.wpm:.2f} WPM\n{self.accuracy:.2f}% accuracy", font=("Helvetica", 18))
@@ -62,20 +79,26 @@ class TypeSpeedGUI:
                 t = threading.Thread(target= self.time_thread)
                 t.start()
         
-        self.sample_label.config(underline= self.track)
-
         if self.text_list[0].startswith(self.input_entry.get()) and event.keycode not in [13, 16, 17, 18, 32]:
-            if event.keycode == 8 and self.input_entry.get():
-                # print("back")
+            if event.keycode == 8 and self.input_entry.get() :
+                # print("this1")
+                if self.red == True:
+                    self.red = False
+                    return
                 self.track -= 1
-            elif self.input_entry.get() :
-                # print("foward")
+                self.track_words -= 1
+                # print(self.track_words)
+            elif event.keycode != 8 and self.input_entry.get() :
+                # print("this2")
                 self.track += 1
+                self.track_words += 1
+                # print(self.track_words)
             
         self.char_count += 1
 
         if not self.text_list[0].startswith(self.input_entry.get()) and event.keycode != 32:
             self.red_char += 1
+            self.red = True
             self.input_entry.config(fg="red")
 
         else:
@@ -85,23 +108,26 @@ class TypeSpeedGUI:
         if event.keycode == 32:
             self.cur_word = self.text_list[0]
             count = 0
-            if self.input_entry.get().startswith(self.text_list[0]):
+            if self.input_entry.get().startswith(self.cur_word) and self.track_words == len(self.cur_word):
                 self.text_list.remove(self.cur_word)
                 count = 0
             elif count == 0 :
-                # print("back sentence")
-                self.track -=  (len(self.cur_word) + 1)
+                # print("this3")
+                self.track -=  (self.track_words + 1)
                 count = 1
-            # print("next")
+            # print("this4")
             self.track += 1
+            self.track_words = 0
+            # print(self.track_words)
             self.input_entry.delete(0, END)
+
+        self.sample_label.config(underline= self.track)
 
         if self.text_list == [] or self.text_list == None:
             self.running = False
             self.input_entry.config(state= 'disable')
         
     def track_word(self, event):
-        # print ("plaea")
         self.sample_label.config(underline= self.track)
         
         if self.cur_word.startswith(self.input_entry.get()) and not event.keycode in [8, 13, 16, 17, 18, 32]:
@@ -162,12 +188,13 @@ class TypeSpeedGUI:
         self.input_entry.config(state = 'normal')
         self.char_count = 0
         self.red_char = 0
+        self.red = False
         self.counter = 0
         self.wpm = 0
         self.random_text = random.choice(self.text)
         self.text_list = self.random_text.split()
         self.track = 0
-        # self.count = 0
+        self.track_words = 0 
         self.cur_word = ""
         self.speed_label.config(text= f"{self.wpm:.2f} WPM\n{self.accuracy:.2f}% accuracy")
         self.sample_label.config(text= self.random_text, underline= self.track)
