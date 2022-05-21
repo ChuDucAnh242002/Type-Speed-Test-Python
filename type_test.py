@@ -23,7 +23,7 @@ class TypeSpeedGUI:
         self.root.geometry("1200x400")
 
         # Create random text
-        self.text = open("text.txt", "r").read().split("\n")
+        self.text = open("text1.txt", "r").read().split("\n")
         self.random_text = random.choice(self.text)
         self.text_list = self.random_text.split()
 
